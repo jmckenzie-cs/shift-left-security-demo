@@ -1,4 +1,4 @@
-# Shift-Left Security Demo - Intentionally Vulnerable Infrastructure 
+# Shift-Left Security Demo - Intentionally Vulnerable Infrastructure
 # This template contains multiple security misconfigurations for demonstration
 
 terraform {
