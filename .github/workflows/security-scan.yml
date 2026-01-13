@@ -111,16 +111,16 @@ jobs:
                   echo "   🔵 Info: $INFO"
                   echo "   📊 Total: $TOTAL"
 
-                  # Show some example findings
+                  # Show all security findings
                   if [ "$TOTAL" -gt "0" ]; then
                     echo ""
-                    echo "📝 Sample Security Findings:"
-                    cat "$json_file" | jq -r '.rule_detections[0:3][]? | "   • \(.rule_name): \(.details // .description // "Security issue detected")"' 2>/dev/null | head -5 || echo "   (Unable to parse findings details)"
+                    echo "📝 All Security Findings:"
+                    cat "$json_file" | jq -r '.rule_detections[]? | "   • [\(.severity)] \(.rule_name): \(.details // .description // "Security issue detected")"' 2>/dev/null || echo "   (Unable to parse findings details)"
                   fi
                 else
                   echo "   ⚠️ jq not available - cannot parse detailed results"
-                  echo "   Raw result preview:"
-                  head -20 "$json_file"
+                  echo "   Full raw results:"
+                  cat "$json_file"
                 fi
                 echo ""
               fi
@@ -148,6 +148,13 @@ jobs:
           ./fcs-results/
         retention-days: 30
 
+    - name: 🔐 Upload SARIF to GitHub Security
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: './fcs-results/'
+        category: 'FCS-CLI-IaC-Scan'
+
     - name: 📝 Comment PR with Results Summary
       if: github.event_name == 'pull_request' && always()
       uses: actions/github-script@v7
@@ -170,7 +177,9 @@ jobs:
           comment += `- Project: \`shift-left-security-demo-terraform\`\\n`;
           comment += `- Formats: JSON, SARIF\\n\\n`;
 
-          comment += `🔗 **View detailed results in CrowdStrike Falcon Console**\\n\\n`;
+          comment += `🔗 **View detailed results in:**\\n`;
+          comment += `- CrowdStrike Falcon Console\\n`;
+          comment += `- GitHub Security tab (Security → Code scanning alerts)\\n\\n`;
           comment += `📁 **Artifacts:** Check the workflow run for detailed scan results\\n\\n`;
           comment += `---\\n`;
           comment += `*This is an automated security scan for the shift-left security demo*`;
@@ -191,6 +200,7 @@ jobs:
         echo "✅ Terraform configuration validated"
         echo "✅ Security scan completed with FCS CLI"
         echo "✅ Results uploaded to CrowdStrike Falcon Console"
+        echo "✅ SARIF results uploaded to GitHub Security Hub"
         echo "✅ Artifacts stored for download"
         echo ""
         if [ "${{ steps.fcs-scan.outputs.exit-code }}" = "0" ]; then

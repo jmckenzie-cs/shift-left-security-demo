@@ -34,6 +34,7 @@ This repository demonstrates how to integrate security scanning into your develo
 - ✅ Terraform syntax validation
 - ✅ FCS CLI security scanning
 - ✅ Results uploaded to CrowdStrike Falcon Console
+- ✅ SARIF results uploaded to GitHub Security Hub
 - ✅ Detailed findings displayed in GitHub
 - ✅ PR comments with security feedback
 - ✅ Downloadable scan artifacts
@@ -68,6 +69,7 @@ This repository demonstrates how to integrate security scanning into your develo
 **In GitHub:**
 - Check the Actions tab for workflow results
 - View detailed scan output in workflow logs
+- **View security alerts in Security tab → Code scanning alerts**
 - Download scan artifacts for offline analysis
 
 **In CrowdStrike Falcon Console:**

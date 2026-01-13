@@ -64,7 +64,7 @@ A professional presentation guide for demonstrating Terraform security scanning 
 1. **Triggers (lines 3-8):** "Runs on every code push and pull request"
 2. **Validation (lines 33-39):** "First checks Terraform syntax and runs terraform validate"
 3. **Security Scan (lines 41-56):** "FCS CLI scans for security issues"
-4. **Results Upload:** "Findings sent to CrowdStrike Falcon Console"
+4. **Results Upload:** "Findings sent to CrowdStrike Falcon Console and GitHub Security Hub"
 
 **Key Message:** *"This runs automatically - developers get immediate feedback without manual security reviews."*
 
@@ -97,8 +97,9 @@ variable "environment" {
 **Show workflow results:**
 1. **Workflow status:** Green/red indicator shows pass/fail
 2. **Detailed logs:** Expand the "Display Security Scan Results" step
-3. **Findings summary:** Point out critical/high/medium counts
-4. **Sample issues:** Show specific vulnerabilities detected
+3. **All findings displayed:** Complete list of security issues (not just a sample)
+4. **GitHub Security tab:** Navigate to Security → Code scanning alerts
+5. **Sample issues:** Show specific vulnerabilities detected
 
 **Expected Results:**
 ```
@@ -129,7 +130,7 @@ variable "environment" {
 
 ### For Technical Audiences
 - "Zero configuration scanning - works with existing Terraform"
-- "SARIF output integrates with GitHub Security tab"
+- "SARIF output integrates with GitHub Security Hub for native GitHub alerts"
 - "Policy-as-code allows custom security rules"
 - "Scales across multiple repositories and teams"
 
