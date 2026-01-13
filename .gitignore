@@ -1,0 +1,34 @@
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# CloudFormation generated files
+*.template
+*.tmp
+
+# AWS CLI config (avoid committing credentials)
+.aws/
+
+# Logs
+*.log
+
+# Security scan results
+results/
+reports/
+scan-results/
+
+# FCS CLI outputs
+upload-results/
+fcs-results/

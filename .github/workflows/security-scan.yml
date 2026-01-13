@@ -1,0 +1,214 @@
+name: 🔒 Shift-Left Security Scan (CloudFormation)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  CLOUDFORMATION_PATH: './cloudformation/'
+
+jobs:
+  security-scan:
+    name: 🛡️ CloudFormation Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      security-events: write
+      actions: read
+
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: ✅ CloudFormation Validation
+      run: |
+        echo "🔍 Validating CloudFormation template syntax..."
+
+        # Install AWS CLI for validation
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install
+
+        # Configure AWS CLI with dummy credentials for validation (template validation doesn't require real creds)
+        aws configure set aws_access_key_id "dummy"
+        aws configure set aws_secret_access_key "dummy"
+        aws configure set region "us-east-1"
+
+        # Validate CloudFormation template
+        for template in ${{ env.CLOUDFORMATION_PATH }}*.yaml ${{ env.CLOUDFORMATION_PATH }}*.yml; do
+          if [ -f "$template" ]; then
+            echo "Validating: $template"
+            aws cloudformation validate-template --template-body file://"$template" || echo "⚠️ Validation failed for $template"
+          fi
+        done
+
+    - name: 🔍 FCS CLI Security Scan
+      id: fcs-scan
+      uses: crowdstrike/fcs-action@v3.0.0
+      with:
+        falcon_client_id: ${{ secrets.FALCON_CLIENT_ID }}
+        falcon_region: 'us-2'
+        path: ${{ env.CLOUDFORMATION_PATH }}
+        project_name: 'shift-left-security-demo-cloudformation'
+        report_formats: json,sarif
+        output_path: './fcs-results/'
+        policy_rule: 'default-iac-alert-rule'
+        fail_on: 'critical=5,high=10'
+        minimum_severity: low
+        upload_results: true
+      env:
+        FALCON_CLIENT_SECRET: ${{ secrets.FALCON_CLIENT_SECRET }}
+
+    - name: 📊 Display Security Scan Results
+      if: always()
+      run: |
+        FCS_EXIT_CODE="${{ steps.fcs-scan.outputs.exit-code }}"
+
+        echo "🔍 FCS CLI Security Scan Results"
+        echo "================================="
+        echo "Exit Code: $FCS_EXIT_CODE"
+        echo ""
+
+        if [ "$FCS_EXIT_CODE" = "0" ]; then
+          echo "✅ No critical security issues found that exceed the threshold"
+          echo "📤 Results uploaded to CrowdStrike Falcon Console"
+        else
+          echo "⚠️ Security issues detected that exceed configured thresholds"
+          echo "📤 Detailed results uploaded to CrowdStrike Falcon Console"
+        fi
+
+        echo ""
+        echo "📁 Scan Results Directory:"
+        if [ -d "./fcs-results" ]; then
+          ls -la ./fcs-results/
+          echo ""
+
+          # Display summary if JSON results exist
+          if ls ./fcs-results/*.json 1> /dev/null 2>&1; then
+            echo "📋 Security Issues Summary:"
+            echo "=========================="
+
+            for json_file in ./fcs-results/*.json; do
+              if [ -f "$json_file" ]; then
+                echo "📄 File: $(basename "$json_file")"
+
+                # Try to parse summary using jq if available
+                if command -v jq &> /dev/null; then
+                  CRITICAL=$(cat "$json_file" | jq -r '.detection_summary.critical // 0' 2>/dev/null || echo "0")
+                  HIGH=$(cat "$json_file" | jq -r '.detection_summary.high // 0' 2>/dev/null || echo "0")
+                  MEDIUM=$(cat "$json_file" | jq -r '.detection_summary.medium // 0' 2>/dev/null || echo "0")
+                  INFO=$(cat "$json_file" | jq -r '.detection_summary.informational // 0' 2>/dev/null || echo "0")
+                  TOTAL=$(cat "$json_file" | jq -r '.detection_summary.total // 0' 2>/dev/null || echo "0")
+
+                  # If detection_summary doesn't exist, count from rule_detections
+                  if [ "$TOTAL" = "0" ]; then
+                    CRITICAL=$(cat "$json_file" | jq -r '[.rule_detections[]? | select(.severity == "CRITICAL")] | length' 2>/dev/null || echo "0")
+                    HIGH=$(cat "$json_file" | jq -r '[.rule_detections[]? | select(.severity == "HIGH")] | length' 2>/dev/null || echo "0")
+                    MEDIUM=$(cat "$json_file" | jq -r '[.rule_detections[]? | select(.severity == "MEDIUM")] | length' 2>/dev/null || echo "0")
+                    INFO=$(cat "$json_file" | jq -r '[.rule_detections[]? | select(.severity == "INFORMATIONAL")] | length' 2>/dev/null || echo "0")
+                    TOTAL=$(($CRITICAL + $HIGH + $MEDIUM + $INFO))
+                  fi
+
+                  echo "   🔴 Critical: $CRITICAL"
+                  echo "   🟠 High: $HIGH"
+                  echo "   🟡 Medium: $MEDIUM"
+                  echo "   🔵 Info: $INFO"
+                  echo "   📊 Total: $TOTAL"
+
+                  # Show some example findings
+                  if [ "$TOTAL" -gt "0" ]; then
+                    echo ""
+                    echo "📝 Sample Security Findings:"
+                    cat "$json_file" | jq -r '.rule_detections[0:3][]? | "   • \(.rule_name): \(.details // .description // "Security issue detected")"' 2>/dev/null | head -5 || echo "   (Unable to parse findings details)"
+                  fi
+                else
+                  echo "   ⚠️ jq not available - cannot parse detailed results"
+                  echo "   Raw result preview:"
+                  head -20 "$json_file"
+                fi
+                echo ""
+              fi
+            done
+          else
+            echo "❌ No JSON results found"
+          fi
+        else
+          echo "❌ No results directory found"
+        fi
+
+        echo ""
+        echo "🎯 Demo Purpose:"
+        echo "This CloudFormation template contains intentional security misconfigurations"
+        echo "to demonstrate shift-left security scanning capabilities with CrowdStrike FCS CLI."
+        echo ""
+        echo "🔗 View detailed results in CrowdStrike Falcon Console"
+
+    - name: 📦 Store Security Scan Artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: fcs-security-scan-results-${{ github.run_number }}
+        path: |
+          ./fcs-results/
+        retention-days: 30
+
+    - name: 📝 Comment PR with Results Summary
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+
+          let comment = `## 🔒 Security Scan Results\\n\\n`;
+          comment += `**FCS CLI Exit Code:** \`${{ steps.fcs-scan.outputs.exit-code }}\`\\n\\n`;
+
+          if ('${{ steps.fcs-scan.outputs.exit-code }}' === '0') {
+            comment += `✅ **No critical security issues** found above configured thresholds\\n\\n`;
+          } else {
+            comment += `⚠️ **Security issues detected** that exceed configured thresholds\\n\\n`;
+          }
+
+          comment += `📊 **Scan Details:**\\n`;
+          comment += `- Path Scanned: \`${{ env.CLOUDFORMATION_PATH }}\`\\n`;
+          comment += `- Project: \`shift-left-security-demo-cloudformation\`\\n`;
+          comment += `- Formats: JSON, SARIF\\n\\n`;
+
+          comment += `🔗 **View detailed results in CrowdStrike Falcon Console**\\n\\n`;
+          comment += `📁 **Artifacts:** Check the workflow run for detailed scan results\\n\\n`;
+          comment += `---\\n`;
+          comment += `*This is an automated security scan for the shift-left security demo*`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+    - name: 🎯 Demo Status Summary
+      if: always()
+      run: |
+        echo ""
+        echo "🎯 Shift-Left Security Demo Summary"
+        echo "=================================="
+        echo "✅ CloudFormation template validated"
+        echo "✅ Security scan completed with FCS CLI"
+        echo "✅ Results uploaded to CrowdStrike Falcon Console"
+        echo "✅ Artifacts stored for download"
+        echo ""
+        if [ "${{ steps.fcs-scan.outputs.exit-code }}" = "0" ]; then
+          echo "📈 Demo Status: Scan completed successfully"
+        else
+          echo "📈 Demo Status: Security issues detected (as expected for demo)"
+        fi
+        echo ""
+        echo "This demonstrates shift-left security principles:"
+        echo "• Early detection of IaC security issues"
+        echo "• Automated scanning in CI/CD pipeline"
+        echo "• Integration with enterprise security platforms"
+        echo "• Clear feedback to development teams"

@@ -1,0 +1,142 @@
+# Shift-Left Security Demo - CloudFormation Edition
+
+A simple, clean demonstration of shift-left security principles using CloudFormation Infrastructure as Code (IaC) scanning with CrowdStrike Falcon Cloud Security CLI.
+
+## 🎯 Demo Overview
+
+This repository demonstrates how to integrate security scanning into your development workflow to catch infrastructure security issues **before** they reach production. The demo showcases:
+
+- **CloudFormation template** with intentional security misconfigurations
+- **Automated scanning** using CrowdStrike FCS CLI in GitHub Actions
+- **Real-time results** displayed in GitHub workflow and uploaded to Falcon Console
+- **Professional presentation** suitable for external demonstrations
+
+## 🏗️ What's Included
+
+### CloudFormation Template
+[`cloudformation/vulnerable-infrastructure.yaml`](cloudformation/vulnerable-infrastructure.yaml) contains:
+
+**S3 Bucket Misconfigurations:**
+- ❌ Public read/write access enabled
+- ❌ No encryption configured
+- ❌ No versioning enabled
+- ❌ No access logging
+
+**IAM Security Issues:**
+- ❌ Overly permissive roles with `PowerUserAccess`
+- ❌ Wildcard permissions (`*` actions on `*` resources)
+- ❌ No condition restrictions
+- ❌ Programmatic access keys instead of roles
+
+### Security Scanning Pipeline
+[`.github/workflows/security-scan.yml`](.github/workflows/security-scan.yml) provides:
+
+- ✅ CloudFormation syntax validation
+- ✅ FCS CLI security scanning
+- ✅ Results uploaded to CrowdStrike Falcon Console
+- ✅ Detailed findings displayed in GitHub
+- ✅ PR comments with security feedback
+- ✅ Downloadable scan artifacts
+
+## 🚀 Quick Start
+
+### Prerequisites
+- GitHub repository with Actions enabled
+- CrowdStrike Falcon Cloud Security subscription
+- Falcon API credentials (Client ID and Secret)
+
+### Setup
+
+1. **Clone or fork this repository**
+   ```bash
+   git clone <your-repo-url>
+   cd shift-left-security-demo-v2
+   ```
+
+2. **Configure GitHub Secrets**
+   Go to Repository Settings → Secrets and Variables → Actions, and add:
+   - `FALCON_CLIENT_ID`: Your CrowdStrike Falcon API Client ID
+   - `FALCON_CLIENT_SECRET`: Your CrowdStrike Falcon API Client Secret
+
+3. **Trigger the demo**
+   - Push to `main` or `develop` branch
+   - Create a pull request
+   - Or manually trigger via Actions tab
+
+### View Results
+
+**In GitHub:**
+- Check the Actions tab for workflow results
+- View detailed scan output in workflow logs
+- Download scan artifacts for offline analysis
+
+**In CrowdStrike Falcon Console:**
+- Navigate to Cloud Security → IaC Security
+- Find your project: `shift-left-security-demo-cloudformation`
+- Review detailed security findings and remediation guidance
+
+## 📊 Expected Results
+
+This demo template contains **6+ intentional security issues** that FCS CLI will detect:
+
+| Severity | Count | Examples |
+|----------|-------|----------|
+| Critical | 2+ | Wildcard IAM permissions, Public S3 write access |
+| High | 2+ | Public S3 access, No encryption |
+| Medium | 2+ | No versioning, Access keys usage |
+
+## 🎪 Demo Script
+
+See [`DEMO.md`](DEMO.md) for a complete presentation script with talking points and expected outcomes.
+
+## 🔧 Customization
+
+### Adjusting Scan Thresholds
+Edit the `fail_on` parameter in the GitHub workflow:
+```yaml
+fail_on: 'critical=5,high=10'  # Adjust numbers as needed
+```
+
+### Adding More Vulnerabilities
+Extend the CloudFormation template with additional misconfigurations:
+- RDS instances without encryption
+- Security groups with open access
+- Lambda functions with excessive permissions
+- Missing CloudTrail logging
+
+### Multi-Environment Support
+Use CloudFormation parameters to deploy different configurations:
+```bash
+aws cloudformation deploy \
+  --template-file cloudformation/vulnerable-infrastructure.yaml \
+  --stack-name demo-stack-dev \
+  --parameter-overrides Environment=dev
+```
+
+## 🔒 Security Note
+
+**⚠️ WARNING:** This template contains intentional security vulnerabilities for demonstration purposes.
+- **DO NOT** deploy this template to production environments
+- Use only in isolated demo/test accounts
+- Review and understand each vulnerability before presenting
+
+## 📚 Learn More
+
+- [Shift-Left Security Principles](https://www.crowdstrike.com/cybersecurity-101/shift-left-security/)
+- [CrowdStrike Falcon Cloud Security](https://www.crowdstrike.com/products/cloud-security/)
+- [AWS CloudFormation Best Practices](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/best-practices.html)
+- [Infrastructure as Code Security](https://docs.aws.amazon.com/whitepapers/latest/introduction-devops-aws/infrastructure-as-code.html)
+
+## 🤝 Contributing
+
+This is a demonstration repository. For improvements or questions:
+1. Fork the repository
+2. Make your changes
+3. Test thoroughly in a safe environment
+4. Submit a pull request
+
+---
+
+**Demo Version:** CloudFormation Edition
+**Last Updated:** January 2026
+**Purpose:** External demonstration of shift-left security principles
