@@ -65,7 +65,7 @@ A professional presentation guide for demonstrating Terraform security scanning 
 2. **Validation (lines 33-39):** "First checks Terraform syntax and runs terraform validate"
 3. **Security Scan (lines 41-56):** "FCS CLI scans for security issues"
 4. **Results Upload:** "Findings sent to CrowdStrike Falcon Console and GitHub Security Hub"
-5. **Automated Remediation:** "Creates pull requests with security fixes for critical/high issues"
+5. **Automated Remediation:** "Creates fix branches with security improvements for critical/high issues"
 
 **Key Message:** *"This runs automatically - developers get immediate feedback without manual security reviews."*
 
@@ -100,7 +100,7 @@ variable "environment" {
 2. **Detailed logs:** Expand the "Display Security Scan Results" step
 3. **All findings displayed:** Complete list of security issues (not just a sample)
 4. **GitHub Security tab:** Navigate to Security → Code scanning alerts
-5. **Automated fix PRs:** Check for pull requests created by Security Bot
+5. **Automated fix PRs:** Check for branches created by Security Bot
 6. **Sample issues:** Show specific vulnerabilities detected
 
 **Expected Results:**
@@ -117,21 +117,21 @@ variable "environment" {
 
 **"Now here's where it gets really impressive - automated security fixes."**
 
-**Navigate to Pull Requests tab:**
-1. **Show automated PR**: Look for PR titled "🔒 Fix X Critical/High Security Issues"
-2. **Review PR details**:
+**Navigate to Branches or Code tab:**
+1. **Show automated branch**: Look for branch named "security-fixes/critical-high-remediation"
+2. **Review branch details**:
    - Created by "Security Bot"
-   - Lists all security issues addressed
-   - Shows specific fixes applied
+   - Contains all security fixes applied
+   - Shows specific improvements made
    - Includes security impact and compliance information
-3. **Show the fixes**: Navigate to the "Files changed" tab to see actual code changes
+3. **Show the fixes**: Navigate to the branch to see actual code changes
 4. **Highlight automation**: "This happened automatically - no human intervention required"
 
 **Key Points:**
 - **Immediate Action**: "Critical issues get automatic fixes within minutes of detection"
 - **Smart Fixes**: "Context-aware remediation using security best practices"
 - **Documentation**: "Every fix includes clear explanation of security impact"
-- **Review Process**: "Maintains code review workflow while automating the heavy lifting"
+- **Review Process**: "Creates fix branches for team review while automating the heavy lifting"
 
 **Key Message:** *"This demonstrates the complete shift-left security lifecycle: Detect → Fix → Deploy automatically."*
 
@@ -155,7 +155,7 @@ variable "environment" {
 ### For Technical Audiences
 - "Zero configuration scanning - works with existing Terraform"
 - "SARIF output integrates with GitHub Security Hub for native GitHub alerts"
-- "Automated remediation creates fix PRs with intelligent security improvements"
+- "Automated remediation creates fix branches with intelligent security improvements"
 - "Policy-as-code allows custom security rules"
 - "Scales across multiple repositories and teams"
 
@@ -206,7 +206,7 @@ variable "environment" {
 - ✅ Workflow completes successfully
 - ✅ Security issues detected and displayed
 - ✅ GitHub Security Hub integration working
-- ✅ **Automated remediation PR created**
+- ✅ **Automated remediation branch created**
 - ✅ Results uploaded to Falcon Console
 - ✅ Clear business value articulated
 

@@ -34,7 +34,7 @@ This repository demonstrates how to integrate security scanning into your develo
 
 - ✅ Terraform syntax validation
 - ✅ FCS CLI security scanning
-- ✅ **Automated remediation pull requests** for critical/high severity issues
+- ✅ **Automated remediation branches** for critical/high severity issues
 - ✅ Results uploaded to CrowdStrike Falcon Console
 - ✅ SARIF results uploaded to GitHub Security Hub
 - ✅ Detailed findings displayed in GitHub
@@ -72,7 +72,7 @@ This repository demonstrates how to integrate security scanning into your develo
 - Check the Actions tab for workflow results
 - View detailed scan output in workflow logs
 - **View security alerts in Security tab → Code scanning alerts**
-- **Check for automated remediation pull requests** (fixes critical/high issues)
+- **Check for automated remediation branches** (fixes critical/high issues)
 - Download scan artifacts for offline analysis
 
 **In CrowdStrike Falcon Console:**
@@ -96,8 +96,8 @@ When critical or high severity security issues are detected, the workflow automa
 
 1. **Creates a fix branch** (`security-fixes/critical-high-remediation`)
 2. **Applies security fixes** using secure Terraform templates
-3. **Creates a pull request** with comprehensive details about fixes applied
-4. **Provides clear documentation** of security improvements and business impact
+3. **Pushes the branch** with comprehensive security improvements
+4. **Documents all changes** with detailed fix descriptions and security impact
 
 ### Example Automated Fixes:
 - 🛡️ Block S3 bucket public access (prevents data exposure)

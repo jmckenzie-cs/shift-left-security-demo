@@ -116,26 +116,12 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"""
             return False
 
     def create_pull_request(self, branch_name: str, title: str, body: str) -> bool:
-        """Create a pull request using GitHub CLI"""
-        try:
-            cmd = [
-                'gh', 'pr', 'create',
-                '--title', title,
-                '--body', body,
-                '--head', branch_name,
-                '--base', self.base_branch
-            ]
-
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-            pr_url = result.stdout.strip()
-            print(f"✅ Created pull request: {pr_url}")
-            return True
-
-        except subprocess.CalledProcessError as e:
-            print(f"Error creating pull request: {e}")
-            if e.stderr:
-                print(f"Error details: {e.stderr}")
-            return False
+        """PR creation disabled - branch-based remediation only"""
+        print(f"ℹ️ PR creation skipped - fix branch '{branch_name}' created successfully")
+        print(f"📋 Title: {title}")
+        print(f"📄 Summary: {len(body.splitlines())} line fix description generated")
+        print(f"🔗 Branch available for manual PR creation if desired")
+        return True
 
     def generate_pr_body(self, severity: str, findings: List[Dict], fixes_applied: List[str]) -> str:
         """Generate comprehensive PR description"""
@@ -245,7 +231,7 @@ def main():
                 if remediator.push_branch(branch_name):
                     print("✅ Pushed branch to remote")
 
-                    # Generate PR details
+                    # Generate PR details for documentation
                     pr_title = f"🔒 Fix {len(critical_and_high)} Critical/High Security Issues"
 
                     fixes_applied = [
@@ -259,14 +245,19 @@ def main():
                         "🏗️ Implement secure-by-default infrastructure patterns"
                     ]
 
+                    # Generate comprehensive fix documentation
                     pr_body = remediator.generate_pr_body('CRITICAL/HIGH', critical_and_high, fixes_applied)
 
-                    # Create pull request
-                    if remediator.create_pull_request(branch_name, pr_title, pr_body):
-                        print("🎉 Successfully created security remediation pull request!")
-                    else:
-                        print("❌ Failed to create pull request")
-                        return 1
+                    # Document the remediation (branch-based approach)
+                    print(f"📄 Fix documentation generated:")
+                    print(f"   • Branch: {branch_name}")
+                    print(f"   • Issues addressed: {len(critical_and_high)}")
+                    print(f"   • Fixes applied: {len(fixes_applied)}")
+                    print(f"   • Ready for manual review and deployment")
+
+                    print("🎉 Successfully completed automated security remediation!")
+                    print(f"🔗 Review changes in branch: {branch_name}")
+                    print("📝 To create PR manually: git checkout main && gh pr create --head", branch_name)
                 else:
                     print("❌ Failed to push branch")
                     return 1
