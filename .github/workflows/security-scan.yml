@@ -16,10 +16,10 @@ jobs:
     name: 🛡️ Terraform Security Analysis
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: write
-      security-events: write
-      actions: read
+      contents: write          # Required for creating branches and commits
+      pull-requests: write     # Required for creating pull requests
+      security-events: write   # Required for SARIF upload
+      actions: read           # Required for workflow access
 
     steps:
     - name: 📥 Checkout Code
@@ -155,6 +155,24 @@ jobs:
         sarif_file: './fcs-results/'
         category: 'FCS-CLI-IaC-Scan'
 
+    - name: 🔧 Automated Security Remediation
+      if: always() && github.ref == 'refs/heads/main'  # Only on main branch
+      run: |
+        echo "🔧 Starting automated security remediation..."
+
+        # Configure git for automation
+        git config --global user.name "Security Bot"
+        git config --global user.email "security-bot@github-actions.noreply.github.com"
+
+        # Install Python dependencies
+        python3 -m pip install --quiet requests
+
+        # Run the automated remediation script
+        python3 automation/auto-remediate.py
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+
     - name: 📝 Comment PR with Results Summary
       if: github.event_name == 'pull_request' && always()
       uses: actions/github-script@v7
@@ -201,6 +219,7 @@ jobs:
         echo "✅ Security scan completed with FCS CLI"
         echo "✅ Results uploaded to CrowdStrike Falcon Console"
         echo "✅ SARIF results uploaded to GitHub Security Hub"
+        echo "✅ Automated security remediation executed"
         echo "✅ Artifacts stored for download"
         echo ""
         if [ "${{ steps.fcs-scan.outputs.exit-code }}" = "0" ]; then

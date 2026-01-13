@@ -8,6 +8,7 @@ This repository demonstrates how to integrate security scanning into your develo
 
 - **Terraform configuration** with intentional security misconfigurations
 - **Automated scanning** using CrowdStrike FCS CLI in GitHub Actions
+- **Automated remediation** with pull requests containing security fixes
 - **Real-time results** displayed in GitHub workflow and uploaded to Falcon Console
 - **Professional presentation** suitable for external demonstrations
 
@@ -33,6 +34,7 @@ This repository demonstrates how to integrate security scanning into your develo
 
 - ✅ Terraform syntax validation
 - ✅ FCS CLI security scanning
+- ✅ **Automated remediation pull requests** for critical/high severity issues
 - ✅ Results uploaded to CrowdStrike Falcon Console
 - ✅ SARIF results uploaded to GitHub Security Hub
 - ✅ Detailed findings displayed in GitHub
@@ -70,6 +72,7 @@ This repository demonstrates how to integrate security scanning into your develo
 - Check the Actions tab for workflow results
 - View detailed scan output in workflow logs
 - **View security alerts in Security tab → Code scanning alerts**
+- **Check for automated remediation pull requests** (fixes critical/high issues)
 - Download scan artifacts for offline analysis
 
 **In CrowdStrike Falcon Console:**
@@ -86,6 +89,23 @@ This demo template contains **11+ intentional security issues** that FCS CLI wil
 | Critical | 2+ | Wildcard IAM permissions, Public S3 write access |
 | High | 2+ | Public S3 access, No encryption |
 | Medium | 2+ | No versioning, Access keys usage |
+
+## 🔧 Automated Remediation
+
+When critical or high severity security issues are detected, the workflow automatically:
+
+1. **Creates a fix branch** (`security-fixes/critical-high-remediation`)
+2. **Applies security fixes** using secure Terraform templates
+3. **Creates a pull request** with comprehensive details about fixes applied
+4. **Provides clear documentation** of security improvements and business impact
+
+### Example Automated Fixes:
+- 🛡️ Block S3 bucket public access (prevents data exposure)
+- 🔐 Enable S3 server-side encryption (protects data at rest)
+- 📋 Enable S3 versioning (prevents accidental data loss)
+- 🚫 Remove wildcard IAM permissions (enforces least privilege)
+- 📍 Add IAM condition restrictions (limits permission scope)
+- 🔑 Replace access keys with IAM roles (reduces credential risk)
 
 ## 🎪 Demo Script
 
