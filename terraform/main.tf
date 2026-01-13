@@ -1,5 +1,5 @@
-# Shift-Left Security Demo - Intentionally Vulnerable Infrastructure 
-# This template contains multiple security misconfigurations for demonstration
+# Shift-Left Security Demo - CRITICAL ISSUES FIX
+# This template fixes the most critical security vulnerabilities
 
 terraform {
   required_providers {
@@ -26,15 +26,15 @@ variable "environment" {
   default     = "demo"
 }
 
-# SECURITY ISSUE 1: S3 Bucket with multiple misconfigurations
-resource "aws_s3_bucket" "vulnerable_bucket" {
+# FIXED: S3 Bucket with proper security configurations
+resource "aws_s3_bucket" "secure_bucket" {
   bucket = "shift-left-demo-bucket-${random_string.bucket_suffix.result}"
 
   tags = {
-    Name        = "VulnerableS3Bucket"
+    Name        = "SecureS3Bucket"
     Environment = var.environment
     Purpose     = "ShiftLeftSecurityDemo"
-    SecurityRisk = "High"
+    SecurityRisk = "Low"
   }
 }
 
@@ -44,76 +44,50 @@ resource "random_string" "bucket_suffix" {
   upper   = false
 }
 
-# SECURITY ISSUE 2: Public access block disabled (allows public access)
-resource "aws_s3_bucket_public_access_block" "vulnerable_bucket_pab" {
-  bucket = aws_s3_bucket.vulnerable_bucket.id
+# FIXED: Block all public access (Critical Fix)
+resource "aws_s3_bucket_public_access_block" "secure_bucket_pab" {
+  bucket = aws_s3_bucket.secure_bucket.id
 
-  block_public_acls       = false  # SECURITY ISSUE: Should be true
-  block_public_policy     = false  # SECURITY ISSUE: Should be true
-  ignore_public_acls      = false  # SECURITY ISSUE: Should be true
-  restrict_public_buckets = false  # SECURITY ISSUE: Should be true
+  block_public_acls       = true   # FIXED: Block public ACLs
+  block_public_policy     = true   # FIXED: Block public policies
+  ignore_public_acls      = true   # FIXED: Ignore public ACLs
+  restrict_public_buckets = true   # FIXED: Restrict public buckets
 }
 
-# SECURITY ISSUE 3: Bucket policy allowing public access
-resource "aws_s3_bucket_policy" "vulnerable_bucket_policy" {
-  bucket = aws_s3_bucket.vulnerable_bucket.id
+# FIXED: No public bucket policy (removed dangerous public access)
+# The vulnerable bucket policy has been completely removed for security
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid       = "PublicReadGetObject"
-        Effect    = "Allow"
-        Principal = "*"  # SECURITY ISSUE: Public access
-        Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.vulnerable_bucket.arn}/*"
-      },
-      {
-        Sid       = "PublicListBucket"
-        Effect    = "Allow"
-        Principal = "*"  # SECURITY ISSUE: Public access
-        Action    = "s3:ListBucket"
-        Resource  = aws_s3_bucket.vulnerable_bucket.arn
-      },
-      {
-        Sid       = "PublicWriteAccess"
-        Effect    = "Allow"
-        Principal = "*"  # SECURITY ISSUE: Public write access - extremely dangerous
-        Action = [
-          "s3:PutObject",
-          "s3:PutObjectAcl",
-          "s3:DeleteObject"
-        ]
-        Resource = "${aws_s3_bucket.vulnerable_bucket.arn}/*"
-      }
-    ]
-  })
+# FIXED: Enable versioning (High Priority Fix)
+resource "aws_s3_bucket_versioning" "secure_bucket_versioning" {
+  bucket = aws_s3_bucket.secure_bucket.id
+  versioning_configuration {
+    status = "Enabled"  # FIXED: Enable versioning for data protection
+  }
 }
 
-# SECURITY ISSUE 4: No versioning enabled (data loss risk)
-# Versioning configuration is commented out - missing protection
-# resource "aws_s3_bucket_versioning" "vulnerable_bucket_versioning" {
-#   bucket = aws_s3_bucket.vulnerable_bucket.id
-#   versioning_configuration {
-#     status = "Enabled"
-#   }
-# }
+# FIXED: Enable server-side encryption (High Priority Fix)
+resource "aws_s3_bucket_server_side_encryption_configuration" "secure_bucket_encryption" {
+  bucket = aws_s3_bucket.secure_bucket.id
 
-# SECURITY ISSUE 5: No server-side encryption configured
-# Encryption configuration is commented out - data at rest not encrypted
-# resource "aws_s3_bucket_server_side_encryption_configuration" "vulnerable_bucket_encryption" {
-#   bucket = aws_s3_bucket.vulnerable_bucket.id
-#
-#   rule {
-#     apply_server_side_encryption_by_default {
-#       sse_algorithm = "AES256"
-#     }
-#   }
-# }
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"  # FIXED: Enable encryption at rest
+    }
+    bucket_key_enabled = true
+  }
+}
 
-# SECURITY ISSUE 6: IAM Role with excessive permissions
-resource "aws_iam_role" "vulnerable_role" {
-  name = "VulnerableDemoRole-${var.aws_region}"
+# FIXED: Add access logging for security monitoring
+resource "aws_s3_bucket_logging" "secure_bucket_logging" {
+  bucket = aws_s3_bucket.secure_bucket.id
+
+  target_bucket = aws_s3_bucket.secure_bucket.id
+  target_prefix = "access-logs/"
+}
+
+# FIXED: IAM Role with least privilege permissions (Critical Fix)
+resource "aws_iam_role" "secure_role" {
+  name = "SecureDemoRole-${var.aws_region}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -124,124 +98,84 @@ resource "aws_iam_role" "vulnerable_role" {
         Principal = {
           Service = "ec2.amazonaws.com"
         }
-        # SECURITY ISSUE: No condition restrictions
-        # Condition = {
-        #   StringEquals = {
-        #     "aws:RequestedRegion" = var.aws_region
-        #   }
-        # }
+        # FIXED: Add condition restrictions
+        Condition = {
+          StringEquals = {
+            "aws:RequestedRegion" = var.aws_region
+          }
+        }
       }
     ]
   })
 
   tags = {
-    Name         = "VulnerableIAMRole"
+    Name         = "SecureIAMRole"
     Environment  = var.environment
     Purpose      = "ShiftLeftSecurityDemo"
-    SecurityRisk = "Critical"
+    SecurityRisk = "Low"
   }
 }
 
-# SECURITY ISSUE 7: Attach overly broad managed policy
-resource "aws_iam_role_policy_attachment" "vulnerable_role_attachment" {
-  role       = aws_iam_role.vulnerable_role.name
-  policy_arn = "arn:aws:iam::aws:policy/PowerUserAccess"  # SECURITY ISSUE: Too broad
-}
-
-# SECURITY ISSUE 8: Inline policy with wildcard permissions
-resource "aws_iam_role_policy" "vulnerable_inline_policy" {
-  name = "VulnerableDemoPolicy"
-  role = aws_iam_role.vulnerable_role.id
+# FIXED: Replace PowerUserAccess with specific, limited permissions
+resource "aws_iam_role_policy" "secure_specific_policy" {
+  name = "SecureDemoPolicy"
+  role = aws_iam_role.secure_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid      = "DangerousWildcardAccess"
-        Effect   = "Allow"
-        Action   = "*"        # SECURITY ISSUE: All actions
-        Resource = "*"        # SECURITY ISSUE: All resources
-      },
-      {
-        Sid    = "UnrestrictedAdminAccess"
-        Effect = "Allow"
-        Action = [
-          "iam:*",
-          "s3:*",
-          "ec2:*",
-          "rds:*",
-          "lambda:*"
-        ]
-        Resource = "*"
-        # SECURITY ISSUE: Missing condition restrictions
-      }
-    ]
-  })
-}
-
-# SECURITY ISSUE 9: IAM User with programmatic access (should use roles instead)
-resource "aws_iam_user" "vulnerable_user" {
-  name = "demo-user-${var.aws_region}"
-
-  tags = {
-    Name         = "VulnerableIAMUser"
-    Environment  = var.environment
-    SecurityRisk = "Medium"
-  }
-}
-
-# SECURITY ISSUE 10: Access keys for programmatic access (less secure than roles)
-resource "aws_iam_access_key" "vulnerable_access_key" {
-  user   = aws_iam_user.vulnerable_user.name
-  status = "Active"
-  # SECURITY ISSUE: Access keys are less secure than IAM roles
-}
-
-# SECURITY ISSUE 11: User policy with broad permissions
-resource "aws_iam_user_policy" "vulnerable_user_policy" {
-  name = "VulnerableUserPolicy"
-  user = aws_iam_user.vulnerable_user.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
+        Sid    = "LimitedS3Access"
         Effect = "Allow"
         Action = [
           "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
           "s3:ListBucket"
         ]
-        Resource = "*"  # SECURITY ISSUE: Should be restricted to specific buckets
+        Resource = [
+          aws_s3_bucket.secure_bucket.arn,
+          "${aws_s3_bucket.secure_bucket.arn}/*"
+        ]
+        # FIXED: Add condition restrictions
+        Condition = {
+          StringEquals = {
+            "aws:RequestedRegion" = var.aws_region
+          }
+        }
       }
     ]
   })
 }
 
-# Outputs (some contain sensitive information)
+# FIXED: Use IAM roles instead of access keys - removed vulnerable IAM user and access keys
+# This eliminates the security risk of programmatic access keys
+
+# Secure outputs (no sensitive information exposed)
 output "bucket_name" {
-  description = "Name of the vulnerable S3 bucket"
-  value       = aws_s3_bucket.vulnerable_bucket.bucket
+  description = "Name of the secure S3 bucket"
+  value       = aws_s3_bucket.secure_bucket.bucket
 }
 
 output "bucket_arn" {
-  description = "ARN of the vulnerable S3 bucket"
-  value       = aws_s3_bucket.vulnerable_bucket.arn
+  description = "ARN of the secure S3 bucket"
+  value       = aws_s3_bucket.secure_bucket.arn
 }
 
 output "iam_role_arn" {
-  description = "ARN of the vulnerable IAM role"
-  value       = aws_iam_role.vulnerable_role.arn
+  description = "ARN of the secure IAM role"
+  value       = aws_iam_role.secure_role.arn
 }
 
-output "access_key_id" {
-  description = "Access Key ID for vulnerable user (demo purposes only)"
-  value       = aws_iam_access_key.vulnerable_access_key.id
-  # SECURITY ISSUE: Outputting sensitive information
-}
-
-output "security_issues_count" {
-  description = "Number of intentional security issues in this template"
-  value       = "11+"
+output "security_improvements" {
+  description = "Security improvements implemented"
+  value = [
+    "S3 bucket public access blocked",
+    "Server-side encryption enabled",
+    "Versioning enabled",
+    "Access logging configured",
+    "IAM permissions restricted to least privilege",
+    "IAM conditions added for region restriction",
+    "Removed dangerous wildcard permissions",
+    "Eliminated programmatic access keys",
+    "Added proper resource-specific policies"
+  ]
 }
