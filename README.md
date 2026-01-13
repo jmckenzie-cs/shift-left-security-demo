@@ -1,20 +1,20 @@
-# Shift-Left Security Demo - CloudFormation Edition
+# Shift-Left Security Demo - Terraform Edition
 
-A simple, clean demonstration of shift-left security principles using CloudFormation Infrastructure as Code (IaC) scanning with CrowdStrike Falcon Cloud Security CLI.
+A simple, clean demonstration of shift-left security principles using Terraform Infrastructure as Code (IaC) scanning with CrowdStrike Falcon Cloud Security CLI.
 
 ## 🎯 Demo Overview
 
 This repository demonstrates how to integrate security scanning into your development workflow to catch infrastructure security issues **before** they reach production. The demo showcases:
 
-- **CloudFormation template** with intentional security misconfigurations
+- **Terraform configuration** with intentional security misconfigurations
 - **Automated scanning** using CrowdStrike FCS CLI in GitHub Actions
 - **Real-time results** displayed in GitHub workflow and uploaded to Falcon Console
 - **Professional presentation** suitable for external demonstrations
 
 ## 🏗️ What's Included
 
-### CloudFormation Template
-[`cloudformation/vulnerable-infrastructure.yaml`](cloudformation/vulnerable-infrastructure.yaml) contains:
+### Terraform Configuration
+[`terraform/main.tf`](terraform/main.tf) contains:
 
 **S3 Bucket Misconfigurations:**
 - ❌ Public read/write access enabled
@@ -31,7 +31,7 @@ This repository demonstrates how to integrate security scanning into your develo
 ### Security Scanning Pipeline
 [`.github/workflows/security-scan.yml`](.github/workflows/security-scan.yml) provides:
 
-- ✅ CloudFormation syntax validation
+- ✅ Terraform syntax validation
 - ✅ FCS CLI security scanning
 - ✅ Results uploaded to CrowdStrike Falcon Console
 - ✅ Detailed findings displayed in GitHub
@@ -72,12 +72,12 @@ This repository demonstrates how to integrate security scanning into your develo
 
 **In CrowdStrike Falcon Console:**
 - Navigate to Cloud Security → IaC Security
-- Find your project: `shift-left-security-demo-cloudformation`
+- Find your project: `shift-left-security-demo-terraform`
 - Review detailed security findings and remediation guidance
 
 ## 📊 Expected Results
 
-This demo template contains **6+ intentional security issues** that FCS CLI will detect:
+This demo template contains **11+ intentional security issues** that FCS CLI will detect:
 
 | Severity | Count | Examples |
 |----------|-------|----------|
@@ -98,19 +98,17 @@ fail_on: 'critical=5,high=10'  # Adjust numbers as needed
 ```
 
 ### Adding More Vulnerabilities
-Extend the CloudFormation template with additional misconfigurations:
+Extend the Terraform configuration with additional misconfigurations:
 - RDS instances without encryption
 - Security groups with open access
 - Lambda functions with excessive permissions
 - Missing CloudTrail logging
 
 ### Multi-Environment Support
-Use CloudFormation parameters to deploy different configurations:
+Use Terraform variables to deploy different configurations:
 ```bash
-aws cloudformation deploy \
-  --template-file cloudformation/vulnerable-infrastructure.yaml \
-  --stack-name demo-stack-dev \
-  --parameter-overrides Environment=dev
+terraform plan -var="environment=dev"
+terraform apply -var="environment=prod"
 ```
 
 ## 🔒 Security Note
@@ -124,7 +122,8 @@ aws cloudformation deploy \
 
 - [Shift-Left Security Principles](https://www.crowdstrike.com/cybersecurity-101/shift-left-security/)
 - [CrowdStrike Falcon Cloud Security](https://www.crowdstrike.com/products/cloud-security/)
-- [AWS CloudFormation Best Practices](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/best-practices.html)
+- [Terraform Best Practices](https://developer.hashicorp.com/terraform/cloud-docs/recommended-practices)
+- [AWS Terraform Provider Documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [Infrastructure as Code Security](https://docs.aws.amazon.com/whitepapers/latest/introduction-devops-aws/infrastructure-as-code.html)
 
 ## 🤝 Contributing
@@ -137,6 +136,6 @@ This is a demonstration repository. For improvements or questions:
 
 ---
 
-**Demo Version:** CloudFormation Edition
+**Demo Version:** Terraform Edition
 **Last Updated:** January 2026
 **Purpose:** External demonstration of shift-left security principles

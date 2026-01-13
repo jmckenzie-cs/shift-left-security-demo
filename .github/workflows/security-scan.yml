@@ -1,4 +1,4 @@
-name: 🔒 Shift-Left Security Scan (CloudFormation)
+name: 🔒 Shift-Left Security Scan (Terraform)
 
 on:
   push:
@@ -8,11 +8,12 @@ on:
   workflow_dispatch:
 
 env:
-  CLOUDFORMATION_PATH: './cloudformation/'
+  TERRAFORM_VERSION: 1.6.0
+  TERRAFORM_PATH: './terraform/'
 
 jobs:
   security-scan:
-    name: 🛡️ CloudFormation Security Analysis
+    name: 🛡️ Terraform Security Analysis
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,27 +25,18 @@ jobs:
     - name: 📥 Checkout Code
       uses: actions/checkout@v4
 
-    - name: ✅ CloudFormation Validation
+    - name: 🔧 Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+    - name: ✅ Terraform Validation
       run: |
-        echo "🔍 Validating CloudFormation template syntax..."
-
-        # Install AWS CLI for validation
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-        unzip awscliv2.zip
-        sudo ./aws/install
-
-        # Configure AWS CLI with dummy credentials for validation (template validation doesn't require real creds)
-        aws configure set aws_access_key_id "dummy"
-        aws configure set aws_secret_access_key "dummy"
-        aws configure set region "us-east-1"
-
-        # Validate CloudFormation template
-        for template in ${{ env.CLOUDFORMATION_PATH }}*.yaml ${{ env.CLOUDFORMATION_PATH }}*.yml; do
-          if [ -f "$template" ]; then
-            echo "Validating: $template"
-            aws cloudformation validate-template --template-body file://"$template" || echo "⚠️ Validation failed for $template"
-          fi
-        done
+        echo "🔍 Validating Terraform configuration..."
+        cd ${{ env.TERRAFORM_PATH }}
+        terraform init -backend=false
+        terraform validate
+        echo "✅ Terraform validation completed"
 
     - name: 🔍 FCS CLI Security Scan
       id: fcs-scan
@@ -52,8 +44,8 @@ jobs:
       with:
         falcon_client_id: ${{ secrets.FALCON_CLIENT_ID }}
         falcon_region: 'us-2'
-        path: ${{ env.CLOUDFORMATION_PATH }}
-        project_name: 'shift-left-security-demo-cloudformation'
+        path: ${{ env.TERRAFORM_PATH }}
+        project_name: 'shift-left-security-demo-terraform'
         report_formats: json,sarif
         output_path: './fcs-results/'
         policy_rule: 'default-iac-alert-rule'
@@ -142,7 +134,7 @@ jobs:
 
         echo ""
         echo "🎯 Demo Purpose:"
-        echo "This CloudFormation template contains intentional security misconfigurations"
+        echo "This Terraform configuration contains intentional security misconfigurations"
         echo "to demonstrate shift-left security scanning capabilities with CrowdStrike FCS CLI."
         echo ""
         echo "🔗 View detailed results in CrowdStrike Falcon Console"
@@ -174,8 +166,8 @@ jobs:
           }
 
           comment += `📊 **Scan Details:**\\n`;
-          comment += `- Path Scanned: \`${{ env.CLOUDFORMATION_PATH }}\`\\n`;
-          comment += `- Project: \`shift-left-security-demo-cloudformation\`\\n`;
+          comment += `- Path Scanned: \`${{ env.TERRAFORM_PATH }}\`\\n`;
+          comment += `- Project: \`shift-left-security-demo-terraform\`\\n`;
           comment += `- Formats: JSON, SARIF\\n\\n`;
 
           comment += `🔗 **View detailed results in CrowdStrike Falcon Console**\\n\\n`;
@@ -196,7 +188,7 @@ jobs:
         echo ""
         echo "🎯 Shift-Left Security Demo Summary"
         echo "=================================="
-        echo "✅ CloudFormation template validated"
+        echo "✅ Terraform configuration validated"
         echo "✅ Security scan completed with FCS CLI"
         echo "✅ Results uploaded to CrowdStrike Falcon Console"
         echo "✅ Artifacts stored for download"

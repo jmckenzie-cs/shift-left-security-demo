@@ -1,6 +1,6 @@
 # Shift-Left Security Demo Script
 
-A professional presentation guide for demonstrating CloudFormation security scanning with CrowdStrike FCS CLI.
+A professional presentation guide for demonstrating Terraform security scanning with CrowdStrike FCS CLI.
 
 ## 🎯 Demo Objectives
 
@@ -27,26 +27,30 @@ A professional presentation guide for demonstrating CloudFormation security scan
 **Key Points:**
 - Traditional security: Find issues in production → expensive, risky fixes
 - Shift-left security: Catch issues during development → cheaper, safer fixes
-- Real-world example using AWS CloudFormation and CrowdStrike
+- Real-world example using Terraform and CrowdStrike
 
 **Show:** GitHub repository homepage, explain the simple structure
 
 ### The Problem (2 minutes)
 
-**"Let's look at what we're scanning - this CloudFormation template has intentional security issues."**
+**"Let's look at what we're scanning - this Terraform configuration has intentional security issues."**
 
-**Navigate to:** [`cloudformation/vulnerable-infrastructure.yaml`](cloudformation/vulnerable-infrastructure.yaml)
+**Navigate to:** [`terraform/main.tf`](terraform/main.tf)
 
 **Highlight these issues:**
-1. **S3 Bucket (lines 20-40):**
+1. **S3 Bucket (lines 20-50):**
    - "No encryption configured - data at rest is vulnerable"
    - "Public access allowed - anyone can read/write data"
    - "No versioning - risk of data loss"
 
-2. **IAM Role (lines 80-100):**
+2. **IAM Role (lines 80-110):**
    - "PowerUserAccess - overly broad permissions"
    - "Wildcard permissions on all resources"
    - "No condition restrictions"
+
+3. **Additional Issues (lines 120+):**
+   - "Programmatic access keys instead of roles"
+   - "User policies with broad S3 access"
 
 **Key Message:** *"These are real security issues that could expose your data and AWS account to attackers."*
 
@@ -58,8 +62,8 @@ A professional presentation guide for demonstrating CloudFormation security scan
 
 **Explain the workflow:**
 1. **Triggers (lines 3-8):** "Runs on every code push and pull request"
-2. **Validation (lines 30-45):** "First checks CloudFormation syntax"
-3. **Security Scan (lines 47-65):** "FCS CLI scans for security issues"
+2. **Validation (lines 33-39):** "First checks Terraform syntax and runs terraform validate"
+3. **Security Scan (lines 41-56):** "FCS CLI scans for security issues"
 4. **Results Upload:** "Findings sent to CrowdStrike Falcon Console"
 
 **Key Message:** *"This runs automatically - developers get immediate feedback without manual security reviews."*
@@ -69,9 +73,13 @@ A professional presentation guide for demonstrating CloudFormation security scan
 **"Let's see this in action."**
 
 **Option A: Make a live change**
-```yaml
-# Add a comment or change description in the CloudFormation template
-Description: 'Updated demo - showing live scanning'
+```hcl
+# Add a comment or change description in the Terraform configuration
+variable "environment" {
+  description = "Updated demo - showing live scanning"
+  type        = string
+  default     = "demo"
+}
 ```
 
 **Option B: Re-run existing workflow**
@@ -94,10 +102,10 @@ Description: 'Updated demo - showing live scanning'
 
 **Expected Results:**
 ```
-🔴 Critical: 2+ (Wildcard permissions, public write access)
-🟠 High: 2+ (Public S3 access, no encryption)
-🟡 Medium: 2+ (No versioning, access keys)
-📊 Total: 6+ issues
+🔴 Critical: 3+ (Wildcard permissions, public write access, admin policies)
+🟠 High: 4+ (Public S3 access, no encryption, broad IAM permissions)
+🟡 Medium: 4+ (No versioning, access keys, missing conditions)
+📊 Total: 11+ issues
 ```
 
 **Key Message:** *"Every issue would have been a production vulnerability - caught automatically during development."*
@@ -120,7 +128,7 @@ Description: 'Updated demo - showing live scanning'
 ## 🎯 Key Talking Points
 
 ### For Technical Audiences
-- "Zero configuration scanning - works with existing CloudFormation"
+- "Zero configuration scanning - works with existing Terraform"
 - "SARIF output integrates with GitHub Security tab"
 - "Policy-as-code allows custom security rules"
 - "Scales across multiple repositories and teams"
@@ -162,7 +170,7 @@ Description: 'Updated demo - showing live scanning'
 - Caching reduces scan times for repeated runs
 
 **"Can this work with other IaC tools?"**
-- Yes - Terraform, Kubernetes YAML, Docker files
+- Yes - CloudFormation, Kubernetes YAML, Docker files
 - Same principles apply across all infrastructure code
 - CrowdStrike supports multiple IaC formats
 
